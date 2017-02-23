@@ -6,9 +6,10 @@ let events = crossfilter_facade([], dc.redrawAll),
 
 let reducer = reductio_facade()
   .count(true)
-reducer.value('size').sum('size')
+// reducer.value('size').sum('size')
 
 let width = document.getElementById('container').clientWidth
+let smallwidth = width > 500 ? width / 3 : width
 let charts = []
 let clearAll = () => {
   charts.forEach((c) => {
@@ -67,7 +68,7 @@ let typeGroup = typeDim.group();
 reducer(typeGroup)
 let typeChart = dc.rowChart('#type')
   .height(180)
-  .width(width/3)
+  .width(smallwidth)
   .margins({top: 5, left: 10, right: 10, bottom: 20})
   .group(typeGroup)
   // .data(function(group) { return group.all().filter(function(d) { return d.key !== ""; }); })
@@ -85,7 +86,7 @@ let minorGroup = minorDim.group();
 reducer(minorGroup)
 let minorChart = dc.rowChart('#minor')
   .height(180)
-  .width(width/3)
+  .width(smallwidth)
   .margins({top: 5, left: 10, right: 10, bottom: 20})
   .group(minorGroup)
   // .data(function(group) { return group.all().filter(function(d) { return d.key !== ""; }); })
@@ -104,7 +105,7 @@ let botGroup = botDim.group();
 reducer(botGroup)
 let botChart = dc.rowChart('#bot')
   .height(180)
-  .width(width/3)
+  .width(smallwidth)
   .margins({top: 5, left: 10, right: 10, bottom: 20})
   .group(botGroup)
   // .data(function(group) { return group.all().filter(function(d) { return d.key !== ""; }); })
@@ -158,6 +159,70 @@ let timeChart = dc.lineChart('#timestamp')
         })
 timeChart.filterHandler(filterHandler)
 charts.push(timeChart)
+
+let sizeDim = events.dimension(function(d) { return d.size ? d.size : 0; });
+// aggregate all 10000+ edits at 10000, strip out 0s (which are actually nulls)  to -1000
+let sizeGroup = sizeDim.group(function(d) { return d > 10000 ? 10000 : d===0 ? -1000 : Math.floor(d/1000)*1000 });
+reducer(sizeGroup)
+let sizeChart = dc.barChart('#size')
+        .width(smallwidth)
+        .height(200)
+        .dimension(sizeDim)
+        // .centerBar(true)
+        .x(d3.scale.linear().domain([0, 11000]))
+        // .y(d3.scale.log())
+        .elasticY(true)
+        .xUnits(function(d) { return 11; })
+        .renderHorizontalGridLines(true)
+        .group(sizeGroup)
+        .valueAccessor(function (d) {
+          return d.value.count
+        })
+sizeChart.yAxis().tickFormat(d3.format("s"))
+sizeChart.xAxis().tickFormat(d3.format("s"))
+sizeChart.filterHandler(function (dimension, filters) {
+  let newFilters = []
+  if(filters[0] && filters[0][1] === 11000) {
+    newFilters[0] = [filters[0][0], 999999999] // Infinity doesn't serialize
+  } else {
+    newFilters = filters
+  }
+  return filterHandler(dimension, newFilters)
+})
+charts.push(sizeChart)
+
+
+let arrivalDim = events.dimension(function(d) { return d.arrivalDelay ? d.arrivalDelay : 0; });
+// aggregate all 10+ delays at 10, strip out 0s (which are actually nulls)  to -1
+let arrivalGroup = arrivalDim.group(function(d) { return d > 10 ? 10 : d===0 ? -1 : Math.floor(d) });
+reducer(arrivalGroup)
+let arrivalChart = dc.barChart('#arrival')
+        .width(smallwidth)
+        .height(200)
+        .dimension(arrivalDim)
+        // .centerBar(true)
+        .x(d3.scale.linear().domain([0, 11]))
+        // .y(d3.scale.log())
+        .elasticY(true)
+        .xUnits(function(d) { return 11; })
+        .renderHorizontalGridLines(true)
+        .group(arrivalGroup)
+        .valueAccessor(function (d) {
+          return d.value.count
+        })
+arrivalChart.yAxis().tickFormat(d3.format("s"))
+arrivalChart.filterHandler(function (dimension, filters) {
+  console.log(filters)
+  let newFilters = []
+  if(filters[0] && filters[0][1] === 11) {
+    newFilters[0] = [filters[0][0], 999999999] // Infinity doesn't serialize
+  } else {
+    newFilters = filters
+  }
+  return filterHandler(dimension, newFilters)
+})
+charts.push(arrivalChart)
+
 
 // userDim = events.dimension(function(d) { return d.user ? d.user : ""; });
 // userGroup = userDim.group();
