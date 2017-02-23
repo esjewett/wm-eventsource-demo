@@ -8,6 +8,14 @@ let reducer = reductio_facade()
   .count(true)
 reducer.value('size').sum('size')
 
+let width = document.getElementById('container').clientWidth
+let charts = []
+let clearAll = () => {
+  charts.forEach((c) => {
+    c.filterAll()
+  })
+}
+
 reductio_facade()
   .groupAll(function() { return [""]; })
   .count(true)(all);
@@ -59,7 +67,7 @@ let typeGroup = typeDim.group();
 reducer(typeGroup)
 let typeChart = dc.rowChart('#type')
   .height(180)
-  .width(300)
+  .width(width/3)
   .margins({top: 5, left: 10, right: 10, bottom: 20})
   .group(typeGroup)
   // .data(function(group) { return group.all().filter(function(d) { return d.key !== ""; }); })
@@ -70,13 +78,14 @@ let typeChart = dc.rowChart('#type')
   .ordinalColors(['#3182bd'])
   .elasticX(true)
 typeChart.filterHandler(filterHandler)
+charts.push(typeChart)
 
 let minorDim = events.dimension(function(d) { return d.minor ? d.minor : ""; });
 let minorGroup = minorDim.group();
 reducer(minorGroup)
 let minorChart = dc.rowChart('#minor')
   .height(180)
-  .width(300)
+  .width(width/3)
   .margins({top: 5, left: 10, right: 10, bottom: 20})
   .group(minorGroup)
   // .data(function(group) { return group.all().filter(function(d) { return d.key !== ""; }); })
@@ -88,13 +97,14 @@ let minorChart = dc.rowChart('#minor')
   .ordinalColors(['#3182bd'])
   .elasticX(true)
 minorChart.filterHandler(filterHandler)
+charts.push(minorChart)
 
 let botDim = events.dimension(function(d) { return d.bot ? d.bot : ""; });
 let botGroup = botDim.group();
 reducer(botGroup)
 let botChart = dc.rowChart('#bot')
   .height(180)
-  .width(300)
+  .width(width/3)
   .margins({top: 5, left: 10, right: 10, bottom: 20})
   .group(botGroup)
   // .data(function(group) { return group.all().filter(function(d) { return d.key !== ""; }); })
@@ -106,13 +116,13 @@ let botChart = dc.rowChart('#bot')
   .ordinalColors(['#3182bd'])
   .elasticX(true);
 botChart.filterHandler(filterHandler)
+charts.push(botChart)
 
 let wikiDim = events.dimension(function(d) { return d.wiki ? d.wiki : ""; });
 let wikiGroup = wikiDim.group();
 reducer(wikiGroup)
 let wikiChart = dc.pieChart('#wiki')
   .height(180)
-  .width(300)
   .group(wikiGroup)
   // .data(function(group) { return group.all().filter(function(d) { return d.key !== ""; }); })
   .valueAccessor(function(d) { return d.value.count; })
@@ -121,8 +131,10 @@ let wikiChart = dc.pieChart('#wiki')
   .ordering((d) => {
     return -d.value.count
   })
+  .innerRadius(30)
   .slicesCap(10)
 wikiChart.filterHandler(filterHandler)
+charts.push(wikiChart)
 
 let timeDim = events.dimension(function(d) { return d.timestamp ? new Date(d.timestamp*1000) : new Date(Date.now()); });
 let timeGroup = timeDim.group();
@@ -130,22 +142,22 @@ let startDate = new Date(Date.now()+5000)
 reducer(timeGroup)
 let timeChart = dc.lineChart('#timestamp')
         .renderArea(true)
-        .width(990)
+        .width(width)
         .height(200)
         .transitionDuration(250)
-        .margins({top: 30, right: 50, bottom: 25, left: 40})
         .dimension(timeDim)
         .round(d3.time.second.round)
         .xUnits(d3.time.seconds)
         .elasticY(true)
         .x(d3.time.scale().domain([startDate, new Date()]))
         .renderHorizontalGridLines(true)
-        .legend(dc.legend().x(800).y(10).itemHeight(13).gap(5))
-        .group(timeGroup, 'Edits by second')
+        .legend(dc.legend().x(width - 100).y(20).itemHeight(13).gap(5))
+        .group(timeGroup, 'Edits per second')
         .valueAccessor(function (d) {
             return d.value.count;
         })
 timeChart.filterHandler(filterHandler)
+charts.push(timeChart)
 
 // userDim = events.dimension(function(d) { return d.user ? d.user : ""; });
 // userGroup = userDim.group();
