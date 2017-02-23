@@ -133,7 +133,8 @@ let wikiChart = dc.pieChart('#wiki')
     return -d.value.count
   })
   .innerRadius(30)
-  .slicesCap(10)
+  .slicesCap(9)
+  .colors(d3.scale.ordinal().range(colorbrewer.Blues[9]))
 wikiChart.filterHandler(filterHandler)
 charts.push(wikiChart)
 
@@ -212,7 +213,6 @@ let arrivalChart = dc.barChart('#arrival')
         })
 arrivalChart.yAxis().tickFormat(d3.format("s"))
 arrivalChart.filterHandler(function (dimension, filters) {
-  console.log(filters)
   let newFilters = []
   if(filters[0] && filters[0][1] === 11) {
     newFilters[0] = [filters[0][0], 999999999] // Infinity doesn't serialize
