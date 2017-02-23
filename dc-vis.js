@@ -118,6 +118,9 @@ let wikiChart = dc.pieChart('#wiki')
   .valueAccessor(function(d) { return d.value.count; })
   .dimension(wikiDim)
   .ordinalColors(['#3182bd'])
+  .ordering((d) => {
+    return -d.value.count
+  })
   .slicesCap(10)
 wikiChart.filterHandler(filterHandler)
 
